@@ -141,7 +141,7 @@ export default function CartPage() {
                     setFormData({ ...formData, name: e.target.value })
                   }
                   placeholder="Full Name"
-                  className="..."
+                  className="w-full p-3 bg-gray-50 border rounded-xl focus:ring-2 ring-black outline-non"
                 />
                 <input
                   required
