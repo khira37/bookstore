@@ -34,9 +34,12 @@ export default function CartPage() {
       email: formData.email,
       address: formData.address,
       totalPrice: totalPrice,
-      // Map cart items into a readable list for Sanity
+      // 1. This is for your readable list in Sanity
       items: cart.map((item) => `${item.title} (x${item.quantity})`),
+      // 2. This is the "raw" data the API needs to find and update stock
+      cartItems: cart,
     };
+
 
     try {
       const response = await fetch("/api/order", {

@@ -17,7 +17,8 @@ export default function BookCard({ book }: any) {
   addToCart(book);
   alert(`${book.title} added to cart!`); // Simple alert for now
 
-};
+  };
+  const isOutOfStock = book.stock <= 0;
   return (
       <div className="flex flex-col h-full border rounded-xl overflow-hidden shadow-lg">
         <div className="relative h-64 w-full">
@@ -27,7 +28,16 @@ export default function BookCard({ book }: any) {
         fill 
         className="object-contain"
       />
+      
       </div>
+
+      <p className="text-sm mb-2">
+      {isOutOfStock ? (
+        <span className="text-red-500 font-bold italic">Out of Stock</span>
+      ) : (
+        <span className="text-green-600 font-medium">{book.stock} in stock</span>
+      )}
+    </p>
 
       <div className="p-4 flex flex-col flex-grow bg-white">
           {/* flex-grow here pushes the price and button to the bottom */}
@@ -36,10 +46,17 @@ export default function BookCard({ book }: any) {
           
           <div className="mt-auto"> {/* mt-auto acts as a spacer */}
             <span className="text-2xl font-bold text-blue-600 block mb-4">${book.price}</span>
-            <button onClick={handleAdd}
-                    className="w-full bg-black text-white px-4 py-2 rounded-lg text-sm">
-              Add to Cart
-            </button>
+            <button
+      disabled={isOutOfStock}
+      onClick={handleAdd}
+      className={`w-full py-2 rounded-lg font-bold ${
+        isOutOfStock 
+        ? "bg-gray-200 text-gray-500 cursor-not-allowed" 
+        : "bg-black text-white"
+      }`}
+    >
+      {isOutOfStock ? "Sold Out" : "Add to Cart"}
+    </button>
           </div>
         </div>
     </div>
