@@ -11,11 +11,13 @@
   "dependencies": {
     "@sanity/image-url": "^1.2.0",
     "@sanity/vision": "^4.22.0",
+    "@stripe/stripe-js": "^9.2.0",
     "next": "16.1.6",
     "next-sanity": "^11.6.12",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "sanity": "^4.22.0",
+    "stripe": "^22.0.2",
     "styled-components": "^6.3.11",
     "zustand": "^5.0.12"
   },

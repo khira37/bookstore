@@ -18,9 +18,18 @@ export default function BookCard({ book }: any) {
   alert(`${book.title} added to cart!`); // Simple alert for now
 
   };
-  const isOutOfStock = book.stock <= 0;
+const isOutOfStock = book.stock <= 0;
+const isLowStock = book.stock > 0 && book.stock < 10;
   return (
-      <div className="flex flex-col h-full border rounded-xl overflow-hidden shadow-lg">
+    
+      <div className="relative border p-4 rounded-xl">
+    {/* BADGE: Shows "Back in Stock" or "Limited" if stock is newly added but low */}
+    {isLowStock && (
+<span className="absolute top-2 right-2 z-10 bg-yellow-400 text-black text-[10px] font-bold px-2 py-1 rounded-full uppercase shadow-sm">        Back in Stock!
+      </span>
+    )}
+        
+        
         <div className="relative h-64 w-full">
         <Image
         src={urlFor(book.cover).url()}
@@ -28,16 +37,16 @@ export default function BookCard({ book }: any) {
         fill 
         className="object-contain"
       />
-      
       </div>
 
-      <p className="text-sm mb-2">
+      <div className="mt-4">
       {isOutOfStock ? (
-        <span className="text-red-500 font-bold italic">Out of Stock</span>
+        <p className="text-red-500 font-bold italic text-sm">Sold Out</p>
       ) : (
-        <span className="text-green-600 font-medium">{book.stock} in stock</span>
+        <p className="text-green-600 text-sm font-medium">{book.stock} available</p>
       )}
-    </p>
+
+     
 
       <div className="p-4 flex flex-col flex-grow bg-white">
           {/* flex-grow here pushes the price and button to the bottom */}
@@ -47,18 +56,19 @@ export default function BookCard({ book }: any) {
           <div className="mt-auto"> {/* mt-auto acts as a spacer */}
             <span className="text-2xl font-bold text-blue-600 block mb-4">${book.price}</span>
             <button
-      disabled={isOutOfStock}
-      onClick={handleAdd}
-      className={`w-full py-2 rounded-lg font-bold ${
-        isOutOfStock 
-        ? "bg-gray-200 text-gray-500 cursor-not-allowed" 
-        : "bg-black text-white"
-      }`}
-    >
-      {isOutOfStock ? "Sold Out" : "Add to Cart"}
-    </button>
+        disabled={isOutOfStock}
+        onClick={handleAdd}
+        className={`w-full mt-2 py-2 rounded-lg font-bold transition-all ${
+          isOutOfStock 
+          ? "bg-gray-100 text-gray-400 cursor-not-allowed" 
+          : "bg-black text-white hover:bg-gray-800"
+        }`}
+      >
+        {isOutOfStock ? "Out of Stock" : "Add to Cart"}
+      </button>
           </div>
         </div>
+    </div>
     </div>
   );
 }

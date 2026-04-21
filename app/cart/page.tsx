@@ -19,29 +19,46 @@ export default function CartPage() {
     address: "",
   });
 
-  const handleCheckout = async (e: React.FormEvent) => {
-    e.preventDefault(); // Stop the page from refreshing
+  const handleCheckout = async (e: React.FormEvent, paymentMethod: "COD" | "ONLINE") => {
+  e.preventDefault();
 
-    if (cart.length === 0) return alert("Your cart is empty!");
-    if (!formData.name || !formData.email || !formData.address) {
-      return alert("Please fill in all shipping details");
-    }
+  if (cart.length === 0) return alert("Your cart is empty!");
+  if (!formData.name || !formData.email || !formData.address) {
+    return alert("Please fill in all shipping details");
+  }
 
-    setIsSubmitting(true);
+  setIsSubmitting(true);
 
-    const orderPayload = {
-      name: formData.name,
-      email: formData.email,
-      address: formData.address,
-      totalPrice: totalPrice,
-      // 1. This is for your readable list in Sanity
-      items: cart.map((item) => `${item.title} (x${item.quantity})`),
-      // 2. This is the "raw" data the API needs to find and update stock
-      cartItems: cart,
-    };
+  // 1. Prepare the payload
+  const orderPayload = {
+    name: formData.name,
+    email: formData.email,
+    address: formData.address,
+    totalPrice: totalPrice,
+    items: cart.map((item) => `${item.title} (x${item.quantity})`),
+    cartItems: cart,
+    paymentMethod: paymentMethod, // Now passing the method to the API
+  };
 
+  try {
+    if (paymentMethod === "ONLINE") {
+      // --- ONLINE PAYMENT FLOW ---
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderPayload),
+      });
 
-    try {
+      const data = await response.json();
+
+      if (data.url) {
+        // Redirect the user to Stripe's hosted checkout page
+        window.location.href = data.url;
+      } else {
+        throw new Error("Failed to create checkout session");
+      }
+    } else {
+      // --- CASH ON DELIVERY FLOW (Existing logic) ---
       const response = await fetch("/api/order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -50,16 +67,16 @@ export default function CartPage() {
 
       if (!response.ok) throw new Error("Order failed");
 
-      // Success!
       clearCart();
       router.push("/checkout-success");
-    } catch (error) {
-      console.error(error);
-      alert("There was an error placing your order. Please try again.");
-    } finally {
-      setIsSubmitting(false);
     }
-  };
+  } catch (error) {
+    console.error(error);
+    alert("There was an error processing your request. Please try again.");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   return (
     <main className="max-w-6xl mx-auto p-4 md:p-10">
@@ -135,7 +152,7 @@ export default function CartPage() {
           <div className="lg:col-start-3">
             <div className="bg-white p-6 rounded-2xl shadow-lg border sticky top-10">
               <h2 className="text-xl font-bold mb-6">Customer Details</h2>
-              <form onSubmit={handleCheckout} className="space-y-4">
+              <form onSubmit={(e) => e.preventDefault()}>
                 {" "}
                 <input
                   required
@@ -170,19 +187,31 @@ export default function CartPage() {
                     <span>Total</span>
                     <span>${totalPrice}</span>
                   </div>
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className={`w-full py-4 rounded-xl font-bold text-white transition-all ${
-                      isSubmitting
-                        ? "bg-gray-400 cursor-not-allowed"
-                        : "bg-black hover:bg-gray-900"
-                    }`}
-                  >
-                    {isSubmitting
-                      ? "Processing..."
-                      : `Place Order ($${totalPrice})`}
-                  </button>
+                  <div className="flex flex-col gap-3 mt-6">
+  {/* Online Payment Button */}
+  <button
+    type="button" // Use type="button" to prevent default form submission until clicked
+    disabled={isSubmitting}
+    onClick={(e) => handleCheckout(e, "ONLINE")}
+    className={`w-full py-4 rounded-xl font-bold text-white transition-all bg-blue-600 hover:bg-blue-700 ${
+      isSubmitting ? "opacity-50 cursor-not-allowed" : ""
+    }`}
+  >
+    {isSubmitting ? "Processing..." : "Pay Online with Card"}
+  </button>
+
+  {/* Cash on Delivery Button */}
+  <button
+    type="button"
+    disabled={isSubmitting}
+    onClick={(e) => handleCheckout(e, "COD")}
+    className={`w-full py-4 rounded-xl font-bold text-black border-2 border-black transition-all hover:bg-gray-50 ${
+      isSubmitting ? "opacity-50 cursor-not-allowed" : ""
+    }`}
+  >
+    {isSubmitting ? "Processing..." : "Cash on Delivery"}
+  </button>
+</div>
                 </div>
               </form>
             </div>
