@@ -1,9 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation"; // Add this import at the top
 import { useCartStore } from "@/lib/cartStore"; // Use the path where you saved it
-import Navbar from "@/components/Navbar";
 import Image from "next/image";
-import Link from "next/link";
 import { useState } from "react";
 
 export default function CartPage() {
@@ -144,35 +142,40 @@ export default function CartPage() {
             <div className="bg-white p-6 rounded-2xl shadow-lg border sticky top-10">
               <h2 className="text-xl font-bold mb-6">Customer Details</h2>
               <form onSubmit={(e) => e.preventDefault()}>
-                {" "}
-                <input
-                  required
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  placeholder="Full Name"
-                  className="w-full p-3 bg-gray-50 border rounded-xl focus:ring-2 ring-black outline-non"
-                />
-                <input
-                  required
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
-                  placeholder="Email"
-                  className="w-full p-3 bg-gray-50 border rounded-xl focus:ring-2 ring-black outline-none"
-                />
-                <textarea
-                  required
-                  value={formData.address}
-                  onChange={(e) =>
-                    setFormData({ ...formData, address: e.target.value })
-                  }
-                  placeholder="Shipping Address"
-                  rows={3}
-                  className="w-full p-3 bg-gray-50 border rounded-xl focus:ring-2 ring-black outline-none"
-                />
+                {/* Wrap your inputs in this div to control the gap */}
+                <div className="space-y-4">
+                  <input
+                    required
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
+                    placeholder="Full Name"
+                    className="w-full p-3 bg-gray-50 border rounded-xl focus:ring-2 ring-black outline-none"
+                  />
+
+                  <input
+                    required
+                    value={formData.email}
+                    onChange={(e) =>
+                      setFormData({ ...formData, email: e.target.value })
+                    }
+                    placeholder="Email"
+                    className="w-full p-3 bg-gray-50 border rounded-xl focus:ring-2 ring-black outline-none"
+                  />
+
+                  <textarea
+                    required
+                    value={formData.address}
+                    onChange={(e) =>
+                      setFormData({ ...formData, address: e.target.value })
+                    }
+                    placeholder="Shipping Address"
+                    rows={3}
+                    className="w-full p-3 bg-gray-50 border rounded-xl focus:ring-2 ring-black outline-none"
+                  />
+                </div>
+
                 <div className="border-t pt-4 mt-6">
                   <div className="flex justify-between text-lg font-bold mb-4">
                     <span>Total</span>

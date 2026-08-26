@@ -12,6 +12,7 @@
     "@sanity/image-url": "^1.2.0",
     "@sanity/vision": "^4.22.0",
     "@stripe/stripe-js": "^9.2.0",
+    "lucide-react": "^1.33.0",
     "next": "16.1.6",
     "next-sanity": "^11.6.12",
     "react": "19.2.3",
