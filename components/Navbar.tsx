@@ -73,7 +73,7 @@ export default function Navbar() {
           {/* User Account & Cart */}
           <div className="flex items-center gap-4 text-xs">
             {/* Sign In / Sign Out Toggle */}
-            <div 
+            {/* <div 
               onClick={() => setIsLoggedIn(!isLoggedIn)} 
               className="border border-transparent hover:border-white p-1 rounded cursor-pointer select-none"
             >
@@ -83,7 +83,7 @@ export default function Navbar() {
               <p className="font-bold text-white leading-tight">
                 {isLoggedIn ? 'Sign Out' : 'Account & Lists'}
               </p>
-            </div>
+            </div> */}
 
             {/* Orders Link */}
             <Link href="/orders" className="border border-transparent hover:border-white p-1 rounded">
