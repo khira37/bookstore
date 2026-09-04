@@ -1,15 +1,16 @@
 "use client";
-import { useRouter } from "next/navigation"; // Add this import at the top
-import { useCartStore } from "@/lib/cartStore"; // Use the path where you saved it
+
+import { useRouter } from "next/navigation";
+import { useCartStore } from "@/lib/cartStore";
 import Image from "next/image";
 import { useState } from "react";
+import { urlFor } from "@/sanity/lib/image";
+import Navbar from "@/components/Navbar";
 
 export default function CartPage() {
-  const { cart, totalPrice, clearCart, addToCart, removeFromCart } =
-    useCartStore();
+  const { cart, totalPrice, clearCart, addToCart, removeFromCart } = useCartStore();
   const router = useRouter();
 
-  // State for form and loading
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -17,9 +18,20 @@ export default function CartPage() {
     address: "",
   });
 
+  // Helper function to resolve image sources safely
+  const getImageUrl = (item: any) => {
+    if (!item?.image && !item?.imageUrl) return null;
+    if (typeof item.imageUrl === "string") return item.imageUrl;
+    try {
+      return urlFor(item.image || item.imageUrl).url();
+    } catch {
+      return null;
+    }
+  };
+
   const handleCheckout = async (
     e: React.FormEvent,
-    paymentMethod: "COD" | "ONLINE",
+    paymentMethod: "COD" | "ONLINE"
   ) => {
     e.preventDefault();
 
@@ -40,8 +52,7 @@ export default function CartPage() {
     };
 
     try {
-      const endpoint =
-        paymentMethod === "ONLINE" ? "/api/checkout" : "/api/order";
+      const endpoint = paymentMethod === "ONLINE" ? "/api/checkout" : "/api/order";
 
       const response = await fetch(endpoint, {
         method: "POST",
@@ -67,131 +78,163 @@ export default function CartPage() {
   };
 
   return (
-    <main className="max-w-6xl mx-auto p-4 md:p-10">
-      <h1 className="text-3xl font-bold mb-10">Checkout</h1>
+    <div className="min-h-screen bg-[#eaeded] font-sans text-[#0f1111] pb-20">
+      <Navbar />
 
-      {cart.length === 0 ? (
-        <div className="text-center py-20">Your cart is empty.</div>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-          {/* LEFT COLUMN: Item Management (Takes 2/3 space) */}
-          <div className="lg:col-span-2 space-y-6">
-            <h2 className="text-xl font-semibold border-b pb-4">
-              Review Items
-            </h2>
-            {/* Note: the images arent dispalyed fix it */}
-            {cart.map((item) => (
-              <div
-                key={item._id}
-                className="flex items-center gap-4 bg-white p-4 rounded-xl shadow-sm border"
-              >
-                <div className="relative h-24 w-20 flex-shrink-0 bg-gray-100 rounded-md overflow-hidden">
-                  {item.imageUrl ? (
-                    <Image
-                      src={item.imageUrl}
-                      alt={item.title}
-                      fill
-                      className="object-contain"
-                    />
-                  ) : (
-                    <div className="flex items-center justify-center h-full text-[10px] text-gray-400">
-                      No Image
-                    </div>
-                  )}
-                </div>
+      <main className="max-w-[1500px] mx-auto p-4 md:p-6">
+        <h1 className="text-2xl font-bold mb-4">Shopping Cart</h1>
 
-                <div className="flex-grow">
-                  <h3 className="font-bold text-lg">{item.title}</h3>
-                  <p className="text-blue-600 font-semibold">${item.price}</p>
-
-                  {/* QUANTITY CONTROLS */}
-                  <div className="flex items-center gap-3 mt-3">
-                    <button
-                      onClick={() => removeFromCart(item._id)} // We'll tweak this logic below
-                      className="w-8 h-8 rounded-full border flex items-center justify-center hover:bg-gray-100"
-                    >
-                      -
-                    </button>
-                    <span className="font-medium text-lg">{item.quantity}</span>
-                    <button
-                      onClick={() => addToCart(item)}
-                      disabled={item.quantity >= item.stock} // Disable if limit reached
-                      className={`w-8 h-8 rounded-full border flex items-center justify-center ${
-                        item.quantity >= item.stock
-                          ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                          : "hover:bg-gray-100"
-                      }`}
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => removeFromCart(item._id)} // Add a 'delete' specific button if preferred
-                  className="text-gray-400 hover:text-red-500 p-2"
-                >
-                  ✕
-                </button>
-              </div>
-            ))}
+        {cart.length === 0 ? (
+          <div className="bg-white p-10 rounded-sm border border-gray-300 text-center">
+            <h2 className="text-xl font-bold mb-2">Your Shopping Cart is empty.</h2>
+            <p className="text-sm text-gray-600 mb-4">Check your saved items or continue shopping.</p>
+            <button 
+              onClick={() => router.push("/")}
+              className="bg-[#ffd814] hover:bg-[#f7ca00] text-black px-6 py-2 rounded-full font-medium text-xs border border-[#fcd200]"
+            >
+              Continue Shopping
+            </button>
           </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            
+            {/* LEFT COLUMN: Shopping Items List (Takes 3 Columns) */}
+            <div className="lg:col-span-3 bg-white p-6 border border-gray-300 rounded-sm shadow-xs">
+              <div className="flex justify-between items-end border-b border-gray-200 pb-3 mb-4">
+                <h2 className="text-xl font-bold">Review Cart Items</h2>
+                <span className="text-xs text-gray-500">Price</span>
+              </div>
 
-          {/* RIGHT COLUMN: Sticky Checkout Form (Takes 1/3 space) */}
-          <div className="lg:col-start-3">
-            <div className="bg-white p-6 rounded-2xl shadow-lg border sticky top-10">
-              <h2 className="text-xl font-bold mb-6">Customer Details</h2>
-              <form onSubmit={(e) => e.preventDefault()}>
-                {/* Wrap your inputs in this div to control the gap */}
-                <div className="space-y-4">
+              <div className="divide-y divide-gray-200">
+                {cart.map((item) => {
+                  const imgSrc = getImageUrl(item);
+
+                  return (
+                    <div key={item._id} className="py-4 flex gap-4 items-start">
+                      
+                      {/* Product Image */}
+                      <div className="relative h-28 w-24 flex-shrink-0 bg-gray-50 border border-gray-200 rounded p-1">
+                        {imgSrc ? (
+                          <Image
+                            src={imgSrc}
+                            alt={item.title}
+                            fill
+                            className="object-contain"
+                          />
+                        ) : (
+                          <div className="flex items-center justify-center h-full text-[10px] text-gray-400">
+                            No Image
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Product Info */}
+                      <div className="flex-1">
+                        <h3 className="font-bold text-base hover:text-[#c45500] cursor-pointer">
+                          {item.title}
+                        </h3>
+                        <p className="text-xs text-emerald-700 font-medium my-1">In Stock</p>
+                        <p className="text-xs text-gray-500 mb-3">Eligible for FREE Shipping</p>
+
+                        {/* Quantity Controls */}
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center border border-gray-300 rounded-md bg-gray-50 shadow-xs">
+                            <button
+                              onClick={() => removeFromCart(item._id)}
+                              className="px-2.5 py-0.5 text-sm font-bold text-gray-700 hover:bg-gray-200 rounded-l"
+                            >
+                              -
+                            </button>
+                            <span className="px-3 py-0.5 text-xs font-semibold bg-white border-x border-gray-300">
+                              {item.quantity}
+                            </span>
+                            <button
+                              onClick={() => addToCart(item)}
+                              disabled={item.quantity >= item.stock}
+                              className={`px-2.5 py-0.5 text-sm font-bold text-gray-700 hover:bg-gray-200 rounded-r ${
+                                item.quantity >= item.stock ? "opacity-30 cursor-not-allowed" : ""
+                              }`}
+                            >
+                              +
+                            </button>
+                          </div>
+
+                          <span className="text-gray-300">|</span>
+
+                          <button
+                            onClick={() => removeFromCart(item._id)}
+                            className="text-xs text-[#007185] hover:underline"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Item Subtotal Price */}
+                      <div className="text-right">
+                        <span className="font-bold text-base">${item.price}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="text-right border-t border-gray-200 pt-4 mt-4">
+                <span className="text-sm">
+                  Subtotal ({cart.reduce((a, b) => a + b.quantity, 0)} items):{" "}
+                  <strong className="text-base">${totalPrice}</strong>
+                </span>
+              </div>
+            </div>
+
+            {/* RIGHT COLUMN: Amazon-Style Checkout Card (Takes 1 Column) */}
+            <div className="lg:col-span-1">
+              <div className="bg-white p-5 border border-gray-300 rounded-sm shadow-xs sticky top-6">
+                
+                <div className="text-sm mb-4 pb-3 border-b border-gray-200">
+                  <span className="text-gray-700">Subtotal: </span>
+                  <span className="text-xl font-bold text-black">${totalPrice}</span>
+                </div>
+
+                <h3 className="font-bold text-sm mb-3">Shipping Address</h3>
+                
+                <form onSubmit={(e) => e.preventDefault()} className="space-y-3">
                   <input
                     required
                     value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="Full Name"
-                    className="w-full p-3 bg-gray-50 border rounded-xl focus:ring-2 ring-black outline-none"
+                    className="w-full p-2 bg-white border border-gray-300 rounded text-xs outline-none focus:border-[#e77600] focus:ring-1 focus:ring-[#e77600]"
                   />
 
                   <input
                     required
                     value={formData.email}
-                    onChange={(e) =>
-                      setFormData({ ...formData, email: e.target.value })
-                    }
-                    placeholder="Email"
-                    className="w-full p-3 bg-gray-50 border rounded-xl focus:ring-2 ring-black outline-none"
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    placeholder="Email Address"
+                    className="w-full p-2 bg-white border border-gray-300 rounded text-xs outline-none focus:border-[#e77600] focus:ring-1 focus:ring-[#e77600]"
                   />
 
                   <textarea
                     required
                     value={formData.address}
-                    onChange={(e) =>
-                      setFormData({ ...formData, address: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                     placeholder="Shipping Address"
                     rows={3}
-                    className="w-full p-3 bg-gray-50 border rounded-xl focus:ring-2 ring-black outline-none"
+                    className="w-full p-2 bg-white border border-gray-300 rounded text-xs outline-none focus:border-[#e77600] focus:ring-1 focus:ring-[#e77600]"
                   />
-                </div>
 
-                <div className="border-t pt-4 mt-6">
-                  <div className="flex justify-between text-lg font-bold mb-4">
-                    <span>Total</span>
-                    <span>${totalPrice}</span>
-                  </div>
-                  <div className="flex flex-col gap-3 mt-6">
-                    {/* Online Payment Button */}
+                  <div className="space-y-2 pt-2">
+                    {/* Pay Online Button */}
                     <button
-                      type="button" // Use type="button" to prevent default form submission until clicked
+                      type="button"
                       disabled={isSubmitting}
                       onClick={(e) => handleCheckout(e, "ONLINE")}
-                      className={`w-full py-4 rounded-xl font-bold text-white transition-all bg-blue-600 hover:bg-blue-700 ${
+                      className={`w-full py-2 bg-[#ffd814] hover:bg-[#f7ca00] text-black font-semibold text-xs rounded-full border border-[#fcd200] shadow-xs ${
                         isSubmitting ? "opacity-50 cursor-not-allowed" : ""
                       }`}
                     >
-                      {isSubmitting ? "Processing..." : "Pay Online with Card"}
+                      {isSubmitting ? "Processing..." : "Proceed to Online Checkout"}
                     </button>
 
                     {/* Cash on Delivery Button */}
@@ -199,19 +242,21 @@ export default function CartPage() {
                       type="button"
                       disabled={isSubmitting}
                       onClick={(e) => handleCheckout(e, "COD")}
-                      className={`w-full py-4 rounded-xl font-bold text-black border-2 border-black transition-all hover:bg-gray-50 ${
+                      className={`w-full py-2 bg-gray-100 hover:bg-gray-200 text-black font-semibold text-xs rounded-full border border-gray-400 shadow-xs ${
                         isSubmitting ? "opacity-50 cursor-not-allowed" : ""
                       }`}
                     >
-                      {isSubmitting ? "Processing..." : "Cash on Delivery"}
+                      {isSubmitting ? "Processing..." : "Place Cash on Delivery Order"}
                     </button>
                   </div>
-                </div>
-              </form>
+                </form>
+
+              </div>
             </div>
+
           </div>
-        </div>
-      )}
-    </main>
+        )}
+      </main>
+    </div>
   );
-}
+} 
