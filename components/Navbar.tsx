@@ -5,22 +5,21 @@ import { useCartStore } from '@/lib/cartStore';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Search, ShoppingCart, MapPin, ChevronDown, X } from 'lucide-react';
+import { SignedIn, SignedOut, UserButton, useUser } from '@clerk/nextjs';
 
 export default function Navbar() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { isSignedIn, user } = useUser();
 
-  // Dynamic Cart Counter from your store
+
   const cart = useCartStore((state) => state.cart);
   const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
 
-  // Interactive States
   const [searchTerm, setSearchTerm] = useState(searchParams.get('query') || '');
   const [location, setLocation] = useState('Select Location');
   const [isLocationOpen, setIsLocationOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // Search Submission
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchTerm.trim()) {
@@ -33,10 +32,9 @@ export default function Navbar() {
   return (
     <>
       <header className="bg-[#131921] text-white">
-        {/* Main Header Bar */}
         <div className="flex items-center justify-between px-4 py-2 gap-4 max-w-[1500px] mx-auto text-sm">
           
-          {/* Brand Logo */}
+          {/* Logo */}
           <Link href="/" className="flex items-center text-xl font-bold tracking-tight text-white border border-transparent hover:border-white p-1 rounded">
             BookStore<span className="text-[#febd69]">.com</span>
           </Link>
@@ -53,7 +51,7 @@ export default function Navbar() {
             </div>
           </button>
 
-          {/* White Search Bar */}
+          {/* Search Bar */}
           <form onSubmit={handleSearch} className="flex-1 flex items-center h-10 max-w-2xl">
             <button type="button" className="bg-gray-200 text-gray-700 text-xs px-3 h-full rounded-l border-r border-gray-300 hover:bg-gray-300 flex items-center gap-1">
               All <ChevronDown className="w-3 h-3" />
@@ -72,26 +70,33 @@ export default function Navbar() {
 
           {/* User Account & Cart */}
           <div className="flex items-center gap-4 text-xs">
-            {/* Sign In / Sign Out Toggle */}
-            {/* <div 
-              onClick={() => setIsLoggedIn(!isLoggedIn)} 
-              className="border border-transparent hover:border-white p-1 rounded cursor-pointer select-none"
-            >
-              <p className="text-[11px] text-gray-300 leading-tight">
-                {isLoggedIn ? 'Hello, User' : 'Hello, Sign in'}
-              </p>
-              <p className="font-bold text-white leading-tight">
-                {isLoggedIn ? 'Sign Out' : 'Account & Lists'}
-              </p>
-            </div> */}
+  
+  <div>
+    {!isSignedIn ? (
+      <Link href="/sign-in" className="border border-transparent hover:border-white p-1 rounded block">
+        <p className="text-[11px] text-gray-300 leading-tight">Hello, Sign in</p>
+        <p className="font-bold text-white leading-tight">Account & Lists</p>
+      </Link>
+    ) : (
+      <div className="flex items-center gap-2 border border-transparent hover:border-white p-1 rounded">
+        <UserButton fallbackRedirectUrl="/" />
+        <div className="hidden sm:block">
+          <p className="text-[11px] text-gray-300 leading-tight">
+            Hello, {user?.firstName || 'Customer'}
+          </p>
+          <p className="font-bold text-white leading-tight">Account</p>
+        </div>
+      </div>
+    )}
+  </div>
 
-            {/* Orders Link */}
-            <Link href="/orders" className="border border-transparent hover:border-white p-1 rounded">
-              <p className="text-[11px] text-gray-300 leading-tight">Returns</p>
-              <p className="font-bold text-white leading-tight">& Orders</p>
-            </Link>
+  {/* Orders Link */}
+  <Link href="/orders" className="border border-transparent hover:border-white p-1 rounded">
+    <p className="text-[11px] text-gray-300 leading-tight">Returns</p>
+    <p className="font-bold text-white leading-tight">& Orders</p>
+  </Link>
 
-            {/* Dynamic Cart Icon with Badge */}
+            {/* Cart Icon */}
             <Link href="/cart" className="flex items-center border border-transparent hover:border-white p-1 rounded gap-1">
               <div className="relative">
                 <ShoppingCart className="w-7 h-7 text-white" />
@@ -104,16 +109,6 @@ export default function Navbar() {
               <span className="font-bold text-sm hidden sm:inline">Cart</span>
             </Link>
           </div>
-        </div>
-
-        {/* Categories Bar */}
-        <div className="bg-[#232f3e] text-white text-xs px-4 py-1.5 flex items-center gap-4 overflow-x-auto">
-          <Link href="/" className="font-bold cursor-pointer hover:text-[#febd69]">All Books</Link>
-          <span className="cursor-pointer hover:text-[#febd69]">Best Sellers</span>
-          <span className="cursor-pointer hover:text-[#febd69]">New Releases</span>
-          <span className="cursor-pointer hover:text-[#febd69]">Fiction</span>
-          <span className="cursor-pointer hover:text-[#febd69]">Non-Fiction</span>
-          <span className="cursor-pointer hover:text-[#febd69]">Children's Books</span>
         </div>
       </header>
 
