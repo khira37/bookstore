@@ -1,4 +1,4 @@
-import { client } from "@/sanity/lib/client";
+import { writeClient } from "@/sanity/lib/client";
 import Navbar from "@/components/Navbar";
 import BookCard from "@/components/BookCard";
 import Link from "next/link";
