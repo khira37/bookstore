@@ -20,14 +20,16 @@ export default function CartPage() {
 
   // Helper function to resolve image sources safely
   const getImageUrl = (item: any) => {
-    if (!item?.image && !item?.imageUrl) return null;
+    //if (!item?.image && !item?.imageUrl) return null;
     if (typeof item.imageUrl === "string") return item.imageUrl;
     try {
-      return urlFor(item.image || item.imageUrl).url();
+      return urlFor(item.cover || item.imageUrl).url();
     } catch {
       return null;
     }
   };
+
+  
 
   const handleCheckout = async (
     e: React.FormEvent,
