@@ -3,6 +3,7 @@ export default {
   type: "document",
   title: "Orders",
   fields: [
+    { name: 'userId', title: 'User ID', type: 'string' },
     { name: "customerName", type: "string", title: "Customer Name" },
     { name: "email", type: "string", title: "Email Address" },
     { name: "location", type: "string", title: "Shipping Address" },

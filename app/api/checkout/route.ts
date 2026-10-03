@@ -1,5 +1,6 @@
 import Stripe from 'stripe';
 import { NextResponse } from 'next/server';
+import { verifySession } from '@/lib/session';
 import { Resend } from 'resend';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -14,27 +15,36 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { cartItems, email, name, totalPrice } = body;
 
-    // 1. Create Stripe Session
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: cartItems.map((item: any) => ({
-        price_data: {
-          currency: 'usd',
-          product_data: { 
-            name: item.title,
-            images: item.imageUrl ? [item.imageUrl] : [],
-          },
-          unit_amount: Math.round(item.price * 100), 
-        },
-        quantity: item.quantity,
-      })),
-      mode: 'payment',
-      customer_email: email,
-      success_url: `${req.headers.get('origin')}/checkout-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${req.headers.get('origin')}/cart`,
-    });
+    // 1. Get the authenticated user's session
+    const session = await verifySession();
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-        console.log("Sanity updated! Attempting to send email now...");
+
+    // 2. Format items for Stripe
+    const lineItems = cartItems.map((item: any) => ({
+      price_data: {
+        currency: 'usd',
+        product_data: {
+          name: item.title,
+        },
+        unit_amount: Math.round(item.price * 100),
+      },
+      quantity: item.quantity,
+    }));
+
+    // 3. Create Stripe Checkout Session with userId in metadata
+    const stripeSession = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: lineItems,
+      mode: 'payment',
+      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/orders?success=true`,
+      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/cart`,
+      metadata: {
+        userId: session.userId, // <--- Attach user ID here
+      },
+    });
 
     // 2. Send Email Notification
     await resend.emails.send({
@@ -46,7 +56,7 @@ export async function POST(req: Request) {
         <p><strong>Customer:</strong> ${name}</p>
         <p><strong>Email:</strong> ${email}</p>
         <p><strong>Attempted Total:</strong> $${totalPrice}</p>
-        <p>Stripe Session ID: ${session.id}</p>
+        <p>Stripe Session ID: ${stripeSession.id}</p>
       `,
     });
 
@@ -54,7 +64,7 @@ export async function POST(req: Request) {
 
 console.log("Email function executed.");
 
-    return NextResponse.json({ url: session.url });
+    return NextResponse.json({ url: stripeSession.url });
   } catch (err: any) {
     console.error("Stripe Error:", err.message);
     return NextResponse.json({ error: err.message }, { status: 500 });
