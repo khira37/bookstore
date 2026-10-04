@@ -2,7 +2,7 @@
 
 import bcrypt from 'bcryptjs';
 import { writeClient } from '@/sanity/lib/client';
-import { createSession, deleteSession } from '@/lib/session';
+import { createSession, deleteSession, verifySession } from '@/lib/session';
 import { redirect } from 'next/navigation';
 
 export async function signUpAction(prevState: any, formData: FormData) {
@@ -73,4 +73,8 @@ export async function signInAction(prevState: any, formData: FormData) {
 export async function signOutAction() {
   await deleteSession();
   redirect('/sign-in');
+}
+
+export async function getSessionAction() {
+  return await verifySession();
 }

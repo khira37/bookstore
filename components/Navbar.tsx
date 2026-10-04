@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from 'react';
 import { useCartStore } from "@/lib/cartStore";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -12,13 +12,11 @@ import {
   X,
   User,
 } from "lucide-react";
-import { verifySession } from "@/lib/session";
-import { signOutAction } from "@/app/actions/auth";
+import { getSessionAction, signOutAction } from '@/app/actions/auth';
 
-export default async function Navbar() {
+export default function Navbar() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const session = await verifySession();
 
   const cart = useCartStore((state) => state.cart);
   const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
@@ -26,6 +24,15 @@ export default async function Navbar() {
   const [searchTerm, setSearchTerm] = useState(searchParams.get("query") || "");
   const [location, setLocation] = useState("Select Location");
   const [isLocationOpen, setIsLocationOpen] = useState(false);
+  const [user, setUser] = useState<{ userId: string; email: string } | null>(null);
+
+  useEffect(() => {
+    async function loadUser() {
+      const session = await getSessionAction();
+      setUser(session);
+    }
+    loadUser();
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,36 +99,36 @@ export default async function Navbar() {
 
           {/* User Account & Cart */}
           <div className="flex items-center gap-4 text-xs">
-          
-          {/* Dynamic Sign In vs Account Menu */}
-          {session ? (
-            <div className="group relative border border-transparent hover:border-white p-1 rounded cursor-pointer">
-              <p className="text-[11px] text-gray-300 leading-tight">
-                Hello, {session.email.split('@')[0]}
-              </p>
-              <p className="font-bold text-white leading-tight flex items-center gap-1">
-                Account & Lists <ChevronDown className="w-3 h-3" />
-              </p>
+            {/* Dynamic Sign In vs Account Menu */}
+            {user ? (
+              <div className="group relative border border-transparent hover:border-white p-1 rounded cursor-pointer">
+                <p className="text-[11px] text-gray-300 leading-tight">
+                  Hello, {user.email.split('@')[0]}
+                </p>
+                <p className="font-bold text-white leading-tight flex items-center gap-1">
+                  Account & Lists <ChevronDown className="w-3 h-3" />
+                </p>
 
-              {/* Sign Out Dropdown Menu */}
-              <div className="hidden group-hover:block absolute right-0 top-full mt-1 w-48 bg-white text-black rounded shadow-lg p-3 z-50">
-                <p className="text-xs text-gray-500 mb-2 border-b pb-1">Your Account</p>
-                <form action={signOutAction}>
-                  <button 
-                    type="submit" 
-                    className="w-full text-left text-xs text-red-600 hover:underline font-semibold"
-                  >
-                    Sign Out
-                  </button>
-                </form>
+                {/* Sign Out Dropdown Menu */}
+                <div className="hidden group-hover:block absolute right-0 top-full mt-1 w-48 bg-white text-black rounded shadow-lg p-3 z-50">
+                  <p className="text-xs text-gray-500 mb-2 border-b pb-1">Your Account</p>
+                  <form action={signOutAction}>
+                    <button 
+                      type="submit" 
+                      className="w-full text-left text-xs text-red-600 hover:underline font-semibold"
+                    >
+                      Sign Out
+                    </button>
+                  </form>
+                </div>
               </div>
-            </div>
-          ) : (
-            <Link href="/sign-in" className="border border-transparent hover:border-white p-1 rounded block">
-              <p className="text-[11px] text-gray-300 leading-tight">Hello, Sign in</p>
-              <p className="font-bold text-white leading-tight">Account & Lists</p>
-            </Link>
-          )}
+            ) : (
+              <Link href="/sign-in" className="border border-transparent hover:border-white p-1 rounded block">
+                <p className="text-[11px] text-gray-300 leading-tight">Hello, Sign in</p>
+                <p className="font-bold text-white leading-tight">Account & Lists</p>
+              </Link>
+            )}
+
             {/* Orders Link */}
             <Link
               href="/orders"
