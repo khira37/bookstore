@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server';
 import { verifySession } from '@/lib/session';
 import { Resend } from 'resend';
 
+const session = await verifySession();
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   // @ts-ignore
   apiVersion: '2024-12-18.acacia', 
