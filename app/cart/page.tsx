@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { urlFor } from "@/sanity/lib/image";
 import Navbar from "@/components/Navbar";
+import { createPayOnDeliveryOrder } from "@/app/actions/order";
 
 export default function CartPage() {
   const { cart, totalPrice, clearCart, addToCart, removeFromCart } = useCartStore();
@@ -20,7 +21,6 @@ export default function CartPage() {
 
   // Helper function to resolve image sources safely
   const getImageUrl = (item: any) => {
-    //if (!item?.image && !item?.imageUrl) return null;
     if (typeof item.imageUrl === "string") return item.imageUrl;
     try {
       return urlFor(item.cover || item.imageUrl).url();
@@ -28,8 +28,6 @@ export default function CartPage() {
       return null;
     }
   };
-
-  
 
   const handleCheckout = async (
     e: React.FormEvent,
@@ -44,33 +42,44 @@ export default function CartPage() {
 
     setIsSubmitting(true);
 
-    const orderPayload = {
-      name: formData.name,
-      email: formData.email,
-      address: formData.address,
-      totalPrice: totalPrice,
-      items: cart.map((item) => `${item.title} (x${item.quantity})`),
-      cartItems: cart,
-    };
-
     try {
-      const endpoint = paymentMethod === "ONLINE" ? "/api/checkout" : "/api/order";
+      if (paymentMethod === "COD") {
+        // Execute Pay on Delivery Server Action
+        const res = await createPayOnDeliveryOrder(cart, totalPrice);
 
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(orderPayload),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) throw new Error(data.error || "Order failed");
-
-      if (paymentMethod === "ONLINE" && data.url) {
-        window.location.href = data.url;
+        if (res?.error) {
+          alert(res.error);
+        } else {
+          clearCart();
+          // createPayOnDeliveryOrder automatically redirects to /orders
+        }
       } else {
-        clearCart();
-        router.push("/checkout-success");
+        // Online Payment Flow (Stripe or custom route)
+        const orderPayload = {
+          name: formData.name,
+          email: formData.email,
+          address: formData.address,
+          totalPrice: totalPrice,
+          items: cart.map((item) => `${item.title} (x${item.quantity})`),
+          cartItems: cart,
+        };
+
+        const response = await fetch("/api/checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(orderPayload),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) throw new Error(data.error || "Order failed");
+
+        if (data.url) {
+          window.location.href = data.url;
+        } else {
+          clearCart();
+          router.push("/orders");
+        }
       }
     } catch (error: any) {
       alert(error.message);
@@ -100,7 +109,7 @@ export default function CartPage() {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             
-            {/* LEFT COLUMN: Shopping Items List (Takes 3 Columns) */}
+            {/* LEFT COLUMN: Shopping Items List */}
             <div className="lg:col-span-3 bg-white p-6 border border-gray-300 rounded-sm shadow-xs">
               <div className="flex justify-between items-end border-b border-gray-200 pb-3 mb-4">
                 <h2 className="text-xl font-bold">Review Cart Items</h2>
@@ -189,7 +198,7 @@ export default function CartPage() {
               </div>
             </div>
 
-            {/* RIGHT COLUMN: Amazon-Style Checkout Card (Takes 1 Column) */}
+            {/* RIGHT COLUMN: Amazon-Style Checkout Card */}
             <div className="lg:col-span-1">
               <div className="bg-white p-5 border border-gray-300 rounded-sm shadow-xs sticky top-6">
                 
@@ -261,4 +270,4 @@ export default function CartPage() {
       </main>
     </div>
   );
-} 
+}

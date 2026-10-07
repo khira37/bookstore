@@ -5,10 +5,10 @@ import { verifySession } from '@/lib/session';
 import { writeClient } from '@/sanity/lib/client';
 
 export default async function OrdersPage() {
-  // 1. Get user session from JWT cookie
+  // 1. Get current logged-in user session
   const session = await verifySession();
 
-  // 2. Fetch orders linked to this userId
+  // 2. Fetch all orders where userId matches current user's session ID
   let orders = [];
   if (session?.userId) {
     orders = await writeClient.fetch(
@@ -39,7 +39,7 @@ export default async function OrdersPage() {
           <div className="bg-white p-8 border border-gray-300 rounded text-center">
             <h2 className="text-lg font-bold mb-1">No orders found</h2>
             <p className="text-sm text-gray-600 mb-4">
-              Looks like you haven't placed any orders with this account yet.
+              Looks like you haven't placed any orders yet.
             </p>
             <Link
               href="/"
@@ -53,8 +53,9 @@ export default async function OrdersPage() {
             {orders.map((order: any) => (
               <div
                 key={order._id}
-                className="bg-white border border-gray-300 rounded overflow-hidden"
+                className="bg-white border border-gray-300 rounded overflow-hidden shadow-xs"
               >
+                {/* Order Header */}
                 <div className="bg-gray-100 p-4 border-b border-gray-200 text-xs text-gray-600 flex justify-between flex-wrap gap-4">
                   <div>
                     <p className="uppercase font-bold">Order Placed</p>
@@ -67,17 +68,32 @@ export default async function OrdersPage() {
                     <p className="text-black font-medium">${order.totalPrice}</p>
                   </div>
                   <div>
+                    <p className="uppercase font-bold">Payment Method</p>
+                    <p className="text-black font-medium">{order.paymentMethod || 'Pay on Delivery'}</p>
+                  </div>
+                  <div>
                     <p className="uppercase font-bold">Order ID</p>
                     <p className="text-black font-medium">{order._id}</p>
                   </div>
                 </div>
 
-                <div className="p-4 flex items-center justify-between">
+                {/* Order Details */}
+                <div className="p-4 flex items-center justify-between flex-wrap gap-4">
                   <div>
-                    <span className="inline-block bg-emerald-100 text-emerald-800 text-xs px-2.5 py-0.5 rounded font-bold mb-2">
-                      {order.status || 'Paid'}
+                    <span className="inline-block bg-amber-100 text-amber-800 text-xs px-2.5 py-0.5 rounded font-bold mb-2">
+                      {order.status || 'Pending Delivery'}
                     </span>
+                    <p className="text-sm font-semibold">
+                      {Array.isArray(order.items) ? order.items.join(', ') : 'Items in order'}
+                    </p>
                   </div>
+
+                  <Link
+                    href="/"
+                    className="bg-gray-100 hover:bg-gray-200 text-black px-4 py-2 rounded-md font-medium text-xs border border-gray-300"
+                  >
+                    Buy Again
+                  </Link>
                 </div>
               </div>
             ))}
