@@ -16,13 +16,22 @@ This project was a big challenge for me. Although I had a basic understanding of
 - Stripe – Online payment processing.
 - Resend – Email delivery and notifications.
 
-# Demo & Screenshots:
+# Demo & Screenshots
+## Website
+### 1- Homepage
+![Homepage](./screenshots/Homepage.png)
+### 2- Cart Page
+![Cart](./screenshots/Cart.png)
+### 3- Orders
+![Orders](./screenshots/Orders.png)
+### 4- Search
+![Search](./screenshots/Search.png)
 
-![Homepage](./screenshots/homepage.png)
-image2: cart page
-image3: orders page
-image4: search 
-image5: admin dashboard (books)
-image6: admin dashbaord (orders)
+## Admin Dashboard
+### 1- Books
+![Admin Dashboard (Books)](./screenshots/Admin-books.png)
+### 2- Orders
+![Admin Dashboard (Orders)](./screenshots/Admin-orders.png)
 
-fututre work: whatever the client asks for shall be delivered (:
+# Future Work
+The project is built around the client's needs, so future improvements and features will depend on their requests.
