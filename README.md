@@ -18,7 +18,7 @@ This project was a big challenge for me. Although I had a basic understanding of
 
 # Demo & Screenshots:
 
-image1: homepage
+![Homepage](./screenshots/homepage.png)
 image2: cart page
 image3: orders page
 image4: search 
